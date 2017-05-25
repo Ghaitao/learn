@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xmlns:tx="http://www.springframework.org/schema/tx"
+		xmlns:aop="http://www.springframework.org/schema/aop"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+				http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+				http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+				http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd"
+				default-autowire="byName">
+	<context:load-time-weaver aspectj-weaving="autodetect" />
+	<context:property-placeholder location="classpath:environment/local/*.properties"/>
+	<context:annotation-config />
+	<context:component-scan base-package="com.ght.learn.ffs">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<!-- <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basenames">
+        	<list>
+        		<value>i18n/common/common</value>
+        		<value>i18n/customer/customer</value>
+        		<value>i18n/customer/customerAuditLog</value>
+        		<value>i18n/customer/customerApply</value>
+        		<value>i18n/enums/common</value>
+        		<value>i18n/sys/user</value>
+        		<value>i18n/sys/company</value>
+        		<value>i18n/sys/fileMeta</value>
+        		<value>i18n/sys/role</value>
+        		<value>i18n/sys/menu</value>
+        		<value>i18n/sys/news</value>
+        		<value>i18n/basic/dictionaryData</value>
+        		<value>i18n/basic/airline</value>
+        		<value>i18n/basic/airport</value>
+        		<value>i18n/task/notification</value>
+        		<value>i18n/customer/customerApplyAudit</value>
+        		<value>i18n/customer/customerQuery</value>
+        		<value>i18n/warehouse/warehouse</value>
+        		<value>i18n/warehouse/warehouseEntryMap</value>
+        	</list>
+        </property>
+        <property name="useCodeAsDefaultMessage" value="true"/>
+        <property name="defaultEncoding" value="UTF-8"/>
+    </bean> -->
+	<bean id="messageSource" class="framework.core.io.resource.PatternResourceBundleMessageSource">
+        <constructor-arg>
+        	<list>
+        		<value>classpath:i18n/common/*.properties</value>
+        		<value>classpath:i18n/basic/*.properties</value>
+        		<value>classpath:i18n/sys/*.properties</value>
+        		<value>classpath:i18n/enums/*.properties</value>
+        		<value>classpath:i18n/task/*.properties</value>
+        		<value>classpath:i18n/customer/*.properties</value>
+        		<value>classpath:i18n/order/*.properties</value>
+        		<value>classpath:i18n/warehouse/*.properties</value>
+        	</list>
+        </constructor-arg>
+        <property name="useCodeAsDefaultMessage" value="true"/>
+        <property name="defaultEncoding" value="UTF-8"/>
+    </bean>
+	<bean id="scheduledExecutorService" class="org.springframework.scheduling.concurrent.ScheduledExecutorFactoryBean">
+        <property name="poolSize" value="100" />
+    </bean>
+    
+    <bean id="Jackson2JsonMapper" class="framework.bean.mapping.jackson2.Jackson2JsonMapper">
+    </bean>
+    
+    <bean id="FreemarkerTemplateEngine" class="framework.template.freemarker.FreemarkerTemplateEngine">
+    	<constructor-arg value="/"></constructor-arg>
+    </bean>
+    
+    <bean id="applicationContextHolder" class="framework.core.utils.spring.ApplicationContextHolder"/>
+    
+     <!-- <bean id="applicationContextHolder" class="framework.core.utils.spring.ApplicationContextHolder"/> -->
+     <!-- 条形码生成器 -->
+    <!--  <bean id="barCodeBarcodeGenerator" class="framework.chart.barcode.barcode4j.Barcode4jBarcodeGenerator">
+        <property name="barcodeImageGrayscale" value="true"></property>
+        <property name="barcodeHeight" value="8"></property>
+    </bean> -->
+    <!-- 二维码生成器 -->
+    <bean id="qrCodeZXingBarcodeGenerator" class="framework.chart.barcode.zxing.ZXingBarcodeGenerator">
+    	<property name="barcodeFormat" value="QR_CODE" />
+    	<property name="imageFormat" value="png" />
+    	<property name="margin" value="1" />
+    </bean>
+    
+</beans>

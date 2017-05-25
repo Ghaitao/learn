@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jinzhiyi.ffs.entity.task.Notification">
+
+	<resultMap type="com.ght.learn.ffs.entity.task.Notification" id="notificationMap">  
+        <id property="recId" column="REC_ID"/>
+        <result property="notificationType" column="NOTIFICATION_TYPE" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="action" column="ACTION"/>
+        <result property="receiverUserId" column="RECEIVER_USER_ID"/>
+        <result property="hasRead" column="HAS_READ" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="nameCn" column="NAME_CN"/>
+        <result property="nameEn" column="NAME_EN"/>
+        <result property="correlatedId" column="CORRELATED_ID"/>
+        <result property="createDateTime" column="CREATE_DATE_TIME" javaType="java.sql.Timestamp" jdbcType="TIMESTAMP"/>
+        <result property="creator" column="CREATOR"/>
+        <result property="differSeconds" column="DIFFER_SECONDS"/>
+    </resultMap>
+    
+    <select id="queryMyCountUnreadNotifications" parameterType="java.util.Map" resultType="java.lang.Long">
+        <![CDATA[ 
+        	select count(1)
+			from t_notification n
+			where n.RECEIVER_USER_ID=#{receiverUserId} and n.HAS_READ=#{N} and n.CREATE_DATE_TIME >= date_add(now(), interval #{days} day)
+         ]]>
+    </select>
+    
+    <select id="queryNotifications" parameterType="java.util.Map" resultMap="notificationMap">
+        <![CDATA[ 
+        	select *, timestampdiff(SECOND, n.CREATE_DATE_TIME, now()) DIFFER_SECONDS
+			from t_notification n
+			where n.RECEIVER_USER_ID=#{receiverUserId} and n.CREATE_DATE_TIME >= date_add(now(), interval #{days} day)
+			order by n.HAS_READ asc, n.CREATE_DATE_TIME desc
+         ]]>
+    </select>
+</mapper>

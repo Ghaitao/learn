@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ght.learn.ffs.entity.sys.news">
+
+	<resultMap type="com.ght.learn.ffs.entity.sys.News" id="newsMap">  
+        <id property="recId" column="REC_ID"/>
+        <result property="title" column="TITLE"/>
+        <result property="summary" column="SUMMARY"/>
+        <result property="content" column="CONTENT"/>
+        <result property="grade" column="GRADE" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="top" column="TOP" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="startDateTime" column="START_DATE_TIME" javaType="java.sql.Timestamp" jdbcType="TIMESTAMP"/>
+        <result property="expiryDateTime" column="EXPIRY_DATE_TIME" javaType="java.sql.Timestamp" jdbcType="TIMESTAMP"/>
+        <result property="companyCode" column="COMPANY_CODE"/>
+        <result property="modifier" column="MODIFIER"/>
+        <result property="modifyDateTime" column="MODIFY_DATE_TIME" javaType="java.sql.Timestamp" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    
+    <select id="queryNewsWithPagination" parameterType="java.util.Map" resultMap="newsMap">
+        <![CDATA[ 
+        	SELECT REC_ID, TITLE, SUMMARY, GRADE, TOP, MODIFY_DATE_TIME
+        	FROM S_NEWS
+        	WHERE (COMPANY_CODE=#{companyCode} or COMPANY_CODE=#{adminCompanyCode}) 
+        		AND (START_DATE_TIME IS NULL || START_DATE_TIME <= now()) 
+        		AND (EXPIRY_DATE_TIME IS NULL || EXPIRY_DATE_TIME >= now())
+        	ORDER BY TOP DESC, MODIFY_DATE_TIME DESC
+         ]]>
+    </select>
+</mapper>

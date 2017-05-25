@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xmlns:tx="http://www.springframework.org/schema/tx"
+		xmlns:aop="http://www.springframework.org/schema/aop"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans 
+				http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+				http://www.springframework.org/schema/context 
+				http://www.springframework.org/schema/context/spring-context-4.3.xsd
+				http://www.springframework.org/schema/tx 
+				http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+				http://www.springframework.org/schema/aop 
+				http://www.springframework.org/schema/aop/spring-aop-4.3.xsd"
+				default-autowire="byName">
+	<bean id="DataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="com.mysql.jdbc.Driver"/>
+		<property name="jdbcUrl" value="${jdbc.mysql.url}"/>
+		<property name="user" value="${jdbc.mysql.username}"/>
+		<property name="password" value="${jdbc.mysql.password}"/>
+	</bean>
+	
+	<bean id="SessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="DataSource"/>
+		<property name="packagesToScan">
+			<array>
+				<value>com.ght.learn.ffs.entity</value>
+			</array>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+				<prop key="hibernate.format_sql">false</prop>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.use_sql_comments">false</prop>
+				<prop key="hibernate.max_fetch_depth">3</prop>
+				<prop key="hibernate.jdbc.batch_size">20</prop>
+				<prop key="hibernate.jdbc.fetch_size">20</prop>
+				<prop key="hibernate.cache.use_second_level_cache">false</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="MySqlDialect" class="framework.dao.core.dialect.MySqlSqlDialect"></bean>
+	<bean id="SqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="DataSource"></property>
+		<property name="configLocation" value="classpath:framework/dao/sqlmapping/mybatis/mybatis-config.xml"></property>
+		<property name="mapperLocations" value="classpath*:sqlmapper/*.xml"></property>
+		<property name="plugins">
+			<array>
+				<bean class="framework.dao.sqlmapping.mybatis.PaginationInterceptor">
+					<property name="sqlDialect" ref="MySqlDialect"></property>
+				</bean>
+			</array>
+		</property>
+		<property name="configurationProperties">
+			<props>
+				<prop key="cacheEnabled">false</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="MybaitsSqlMapExecution" class="framework.dao.sqlmapping.mybatis.DefaultMybaitsSqlMapExecution">
+		<constructor-arg ref="DataSource"></constructor-arg>
+		<constructor-arg ref="SqlSessionFactoryBean"></constructor-arg>
+		<constructor-arg value="REUSE"></constructor-arg>
+		<property name="sqlDialect" ref="MySqlDialect" />
+	</bean>
+	
+	<bean id="MySQLHibernateEntityManager" class="framework.dao.orm.hibernate.DefaultHibernate5OrmExecution">
+		<constructor-arg ref="DataSource"></constructor-arg>
+		<constructor-arg ref="SessionFactory"></constructor-arg>
+		<constructor-arg ref="MybaitsSqlMapExecution"></constructor-arg>
+		<property name="sqlDialect" ref="MySqlDialect"></property>
+	</bean>
+	<!-- 事物 -->
+	<bean id="TransactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="SessionFactory"></property>
+	</bean>
+	<tx:advice id="TXAdvice" transaction-manager="TransactionManager">
+		<tx:attributes>
+			<tx:method name="do*" read-only="false" rollback-for="framework.service.ServiceException,Exception"/>
+			<tx:method name="*" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	<!-- proxy-target-class属性值决定是基于接口的还是基于类的代理被创建 -->
+	<aop:config proxy-target-class="true">
+		<aop:advisor advice-ref="TXAdvice" pointcut="execution(* com.ght.learn.ffs.service..*ServiceImpl.*(..))"/>
+	</aop:config>
+	
+	
+	
+</beans>

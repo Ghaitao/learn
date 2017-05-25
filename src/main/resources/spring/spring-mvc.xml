@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="  
+            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd  
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd  
+            http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd"
+	default-autowire="byName">
+	<context:component-scan base-package="com.ght.learn.ffs.web.controller"></context:component-scan>
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+		<property name="viewClass" value="org.springframework.web.servlet.view.JstlView"></property>
+	</bean>
+	<mvc:annotation-driven conversion-service="conversionService">
+		<mvc:message-converters>
+			<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>text/html;charset=UTF-8</value>
+					</list>
+				</property>
+			</bean>
+			<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>application/json;charset=UTF-8</value>
+					</list>
+				</property>
+			</bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+	<bean id="conversionService"
+            class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <bean class="framework.web.springmvc.converter.DateGenericConverter"/>
+                <bean class="com.ght.learn.ffs.tool.converter.SafeStringToNumberConverterFactory"/>
+                <bean class="com.ght.learn.ffs.tool.converter.NumberToStringGenericConverter"/>
+            </set>
+        </property>
+        <property name="formatters">
+            <set>
+                <!-- <bean class="org.example.MyFormatter"/>
+                <bean class="org.example.MyAnnotationFormatterFactory"/> -->
+            </set>
+        </property>
+        <property name="formatterRegistrars">
+            <set>
+                <!-- <bean class="org.example.MyFormatterRegistrar"/> -->
+            </set>
+        </property>
+    </bean>
+    <!-- 上传文件 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="104857600" />
+		<property name="maxUploadSizePerFile" value="10485760" />
+		<property name="maxInMemorySize" value="4096" />
+		<!-- <property name="uploadTempDir" value="" /> -->
+		<property name="defaultEncoding" value="UTF-8"></property>
+	</bean>
+	
+	<bean id="KaptchaCaptchaGenerator" class="framework.chart.captcha.support.KaptchaCaptchaGenerator">
+        <property name="kaptchaProperties">
+        	<props>
+        		<prop key="kaptcha.noise.impl">com.google.code.kaptcha.impl.DefaultNoise</prop>
+        		<prop key="kaptcha.textproducer.char.string">23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ</prop>
+        	</props>
+        </property>
+    </bean>
+	
+	<mvc:interceptors>
+    	<mvc:interceptor>
+            <mvc:mapping path="/**/*.do"/>
+            <bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+            	<property name="paramName" value="_lang"></property>
+            </bean>
+        </mvc:interceptor>
+    </mvc:interceptors>
+	<!-- 该异常是SpringMVC在检查上传的文件信息时抛出来的，而且此时还没有进入到Controller方法中 -->
+	<bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+	 	<property name="exceptionMappings">
+	 		<props>
+	 			<prop key="org.springframework.web.multipart.MaxUploadSizeExceededException">/error/fileUploadError</prop>
+	 		</props>
+	 	</property>
+	</bean>
+</beans>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+	
+	
+	<bean id="SequenceTableOrderSerialNoGenerator" class="com.ght.learn.ffs.tool.sequence.support.SequenceTableOrderSerialNoGenerator">
+		<property name="ffsDataSource" ref="DataSource" />
+		<property name="cacheSize" value="20" />
+	</bean>
+	<bean id="SequenceTableEntrySerialNoGenerator" class="com.ght.learn.ffs.tool.sequence.support.SequenceTableEntrySerialNoGenerator">
+		<property name="ffsDataSource" ref="DataSource" />
+		<property name="cacheSize" value="20" />
+	</bean>
+	<!-- 每月25号3点生成下月的序号 -->
+	<bean id="SequenceTableSerialNoInitor" class="com.ght.learn.ffs.tool.sequence.support.SequenceTableSerialNoInitor">
+		<property name="sqlExecution" ref="MybaitsSqlMapExecution" />
+		<property name="throwableMonitor" ref="DefaultThrowableMonitor" />
+		<property name="companyQueryService" ref="CompanyQueryService" />
+	</bean>
+	
+	<bean id="SequenceTableSerialNoInitorTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="SequenceTableSerialNoInitor" />
+		<property name="targetMethod" value="generateSequenceMonthly" />
+	</bean>
+	<bean id="SequenceTableSerialNoInitorCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="SequenceTableSerialNoInitorTask" />
+		<property name="startDelay" value="3000" />
+		<property name="cronExpression" value="0 0 3 25 * ? *" />
+		<!-- <property name="cronExpression" value="0 */1 * * * ?" /> -->
+	</bean>
+	<bean lazy-init="false" autowire="no" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="SequenceTableSerialNoInitorCronTrigger" />
+			</list>
+		</property>
+	</bean>
+	<!-- 删除通知 -->
+	<bean id="HistoryNotificationsCleaner" class="com.ght.learn.ffs.tool.timertask.HistoryNotificationsCleaner">
+		<property name="sqlExecution" ref="MybaitsSqlMapExecution" />
+		<property name="throwableMonitor" ref="DefaultThrowableMonitor" />
+	</bean>
+	<bean id="HistoryNotificationsCleanerTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="HistoryNotificationsCleaner" />
+		<property name="targetMethod" value="cleanHistoryNotifications" />
+	</bean>
+	<!-- 每月20号3点删除30天之前的通知 -->
+	<bean id="HistoryNotificationsCleanerCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="HistoryNotificationsCleanerTask" />
+		<property name="startDelay" value="3000" />
+		<property name="cronExpression" value="0 0 3 20 * ? *" />
+	</bean>
+	<bean lazy-init="false" autowire="no" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="HistoryNotificationsCleanerCronTrigger" />
+			</list>
+		</property>
+	</bean>
+	
+</beans>
